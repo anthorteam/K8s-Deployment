@@ -1,0 +1,53 @@
+name: 'Apply K8s Deployment'
+description: >
+  Applies a k8s template into a Kubernetes Cluster previously configured.
+  This gets the variables to fill the template from the environment,
+  so to use a variable TEST just add {{ TEST }} to your template and set
+  the variable in the step on the action.
+inputs:
+  K8S_NAMESPACE:
+    description: The namespace in which to deploy
+    required: true
+    default: default
+  DEPLOYMENT_FILE:
+    description: The template file to deploy
+    required: true
+    default: deploy/deployment.yml
+  RESOURCE_TYPE:
+    description: The kubernetes resource type
+    default: deployment
+    required: false
+  RESOURCE_NAME:
+    description: The resource to watch for rollout
+    required: false
+  ROLLOUT_TIMEOUT_MINUTES:
+    description: The time in minutes to wait for the deployment to complete
+    required: false
+    default: '1'
+  GKE_CLUSTER:
+    description: The cluster in which to deploy
+    required: true
+  GKE_CLUSTER_LOCATION:
+    description: The cluster region or zone
+    required: true
+runs:
+  using: "composite"
+  steps:
+  - name: Set up GKE credentials
+    uses: google-github-actions/get-gke-credentials@v0
+    with:
+      cluster_name: ${{ inputs.GKE_CLUSTER }}
+      location: ${{ inputs.GKE_CLUSTER_LOCATION }}
+
+  - name: Replace variables in deployment
+    run: perl -p -i.bak -E 's:{\{\s*(\S+?)\s*\}}:$ENV{$1} // die "$1 not set":ge' ${{ inputs.DEPLOYMENT_FILE }}
+    shell: bash
+  - name: Apply deployment
+    run: |
+      kubectl config set-context --current --namespace=${{ inputs.K8S_NAMESPACE }}
+      kubectl apply -f ${{ inputs.DEPLOYMENT_FILE }}
+      if [ -n "${{ inputs.RESOURCE_NAME }}" ]; then
+        kubectl rollout status ${{ inputs.RESOURCE_TYPE }} ${{ inputs.RESOURCE_NAME }} --timeout=${{ inputs.ROLLOUT_TIMEOUT_MINUTES }}m
+      fi
+    shell: bash
+
