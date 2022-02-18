@@ -8,14 +8,21 @@ The following example deploys a template deploy replacing `{{ IMAGE }}` and `{{ 
 
 
 ```yaml
+- name: Get K8s-Deployment
+  uses: actions/checkout@v2
+  with:
+    repository: anthorteam/K8s-Deployment
+    ref: v1
+    path: ./.github/actions/k8s-deployment
+    
 - id: 'auth'
-  uses: 'google-github-actions/auth@v0'
+  uses: google-github-actions/auth@v0
   with:
     credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
     token_format: 'access_token'
 
 - name: Deploy
-  uses: anthorteam/K8s-Deployment@main
+  uses: ./.github/actions/k8s-deployment
   env:
     IMAGE: gcr.io/anthor-dev/myimage
     TAG: 0000001
