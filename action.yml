@@ -30,6 +30,10 @@ inputs:
   GKE_CLUSTER_LOCATION:
     description: The cluster region or zone
     required: true
+  EXTRA_VARS:
+    description: Extra variables to replace in the deployment file separated by ; in the format <NAME>=<VALUE>
+    required: false
+    default: ""
 runs:
   using: "composite"
   steps:
@@ -40,8 +44,19 @@ runs:
       location: ${{ inputs.GKE_CLUSTER_LOCATION }}
 
   - name: Replace variables in deployment
-    run: perl -p -i.bak -E 's:{\{\s*(\S+?)\s*\}}:$ENV{$1} // die "$1 not set":ge' ${{ inputs.DEPLOYMENT_FILE }}
+    run: |
+      if [ -n "${{ inputs.EXTRA_VARS }}" ]
+      then
+        echo "${{ inputs.EXTRA_VARS }}" | sed "s/;/\n/g" | while read line; 
+        do
+          echo "export $line" >> .env
+        done
+        source .env
+        rm -rf .env
+      fi
+      perl -p -i.bak -E 's:{\{\s*(\S+?)\s*\}}:$ENV{$1} // die "$1 not set":ge' ${{ inputs.DEPLOYMENT_FILE }}
     shell: bash
+
   - name: Apply deployment
     run: |
       kubectl config set-context --current --namespace=${{ inputs.K8S_NAMESPACE }}

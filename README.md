@@ -29,8 +29,8 @@ The following example deploys a template deploy replacing `{{ IMAGE }}` and `{{ 
   with:
     K8S_NAMESPACE: 'dev'
     DEPLOYMENT_FILE: 'deploy/deploy.yaml'
-    DEPLOYMENT_TYPE: 'deployment'
-    DEPLOYMENT_NAME: 'test-deploy'
+    RESOURCE_TYPE: 'deployment'
+    RESOURCE_NAME: 'test-deploy'
     ROLLOUT_TIMEOUT_MINUTES: '1'
     GKE_CLUSTER: ${{ secrets.GKE_CLUSTER }}
     GKE_CLUSTER_LOCATION: ${{ secrets.GKE_ZONE }}
