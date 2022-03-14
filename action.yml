@@ -47,9 +47,12 @@ runs:
     run: |
       if [ -n "${{ inputs.EXTRA_VARS }}" ]
       then
+        touch .env
         echo "${{ inputs.EXTRA_VARS }}" | sed "s/;/\n/g" | while read line; 
         do
-          echo "export $line" >> .env
+          if [ -n "$line" ]; then
+            echo "export $line" >> .env
+          fi
         done
         source .env
         rm -rf .env
