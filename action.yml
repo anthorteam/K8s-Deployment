@@ -45,10 +45,10 @@ runs:
 
   - name: Replace variables in deployment
     run: |
-      if [ -n "${{ inputs.EXTRA_VARS }}" ]
+      if [ -n '${{ inputs.EXTRA_VARS }}' ]
       then
         touch .env
-        echo "${{ inputs.EXTRA_VARS }}" | sed "s/;/\n/g" | while read line; 
+        echo '${{ inputs.EXTRA_VARS }}' | sed "s/;/\n/g" | while read line; 
         do
           if [ -n "$line" ]; then
             echo "export $line" >> .env
