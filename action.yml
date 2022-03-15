@@ -25,11 +25,21 @@ inputs:
     required: false
     default: '1'
   GKE_CLUSTER:
-    description: The cluster in which to deploy
-    required: true
+    description: The GCP cluster in which to deploy
+    required: false
+    default: ""
   GKE_CLUSTER_LOCATION:
     description: The cluster region or zone
-    required: true
+    required: false
+    default: ""
+  OKE_CLUSTER:
+    description: The OCI cluster OCID in which to deploy
+    required: false
+    default: ""
+  OKE_CLUSTER_LOCATION:
+    description: The OCI cluster region or zone
+    required: false
+    default: ""
   EXTRA_VARS:
     description: Extra variables to replace in the deployment file separated by ; in the format <NAME>=<VALUE>
     required: false
@@ -38,10 +48,19 @@ runs:
   using: "composite"
   steps:
   - name: Set up GKE credentials
+    if: ${{ inputs.GKE_CLUSTER }} != ""
     uses: google-github-actions/get-gke-credentials@v0
     with:
       cluster_name: ${{ inputs.GKE_CLUSTER }}
       location: ${{ inputs.GKE_CLUSTER_LOCATION }}
+
+  - name: Set up OKE credentials
+    if: ${{ inputs.OKE_CLUSTER }} != ""
+    shell: bash
+    run: |
+      oci ce cluster create-kubeconfig --cluster-id ${{ inputs.OKE_CLUSTER }} \
+        --file $HOME/.kube/config  --region ${{ inputs.OKE_CLUSTER_LOCATION }} --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
+      export KUBECONFIG=$HOME/.kube/config
 
   - name: Replace variables in deployment
     run: |
