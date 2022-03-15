@@ -48,14 +48,14 @@ runs:
   using: "composite"
   steps:
   - name: Set up GKE credentials
-    if: ${{ inputs.GKE_CLUSTER }} != ""
+    if: ${{ inputs.GKE_CLUSTER }} != "" && ${{ inputs.GKE_CLUSTER_LOCATION }} != ""
     uses: google-github-actions/get-gke-credentials@v0
     with:
       cluster_name: ${{ inputs.GKE_CLUSTER }}
       location: ${{ inputs.GKE_CLUSTER_LOCATION }}
 
   - name: Set up OKE credentials
-    if: ${{ inputs.OKE_CLUSTER }} != ""
+    if: ${{ inputs.OKE_CLUSTER }} != "" && ${{ inputs.GKE_CLUSTER_LOCATION }} != ""
     shell: bash
     run: |
       /home/runner/bin/oci ce cluster create-kubeconfig --cluster-id ${{ inputs.OKE_CLUSTER }} \
