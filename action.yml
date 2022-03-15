@@ -58,7 +58,7 @@ runs:
     if: ${{ inputs.OKE_CLUSTER }} != ""
     shell: bash
     run: |
-      oci ce cluster create-kubeconfig --cluster-id ${{ inputs.OKE_CLUSTER }} \
+      /home/runner/bin/oci ce cluster create-kubeconfig --cluster-id ${{ inputs.OKE_CLUSTER }} \
         --file $HOME/.kube/config  --region ${{ inputs.OKE_CLUSTER_LOCATION }} --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
       export KUBECONFIG=$HOME/.kube/config
 
