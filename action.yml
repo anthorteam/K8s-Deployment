@@ -47,8 +47,19 @@ inputs:
 runs:
   using: "composite"
   steps:
+  - id: check_has_gke
+    shell: bash
+    run: |
+      if [ -z "${{ inputs.GKE_CLUSTER }}" ]; then
+        echo "NO GKE CLUSTER"
+        echo "::set-output name=has_gke::false"
+      else
+        echo "GKE CLUSTER AVAILABLE"
+        echo "::set-output name=has_gke::true"
+      fi
+
   - name: Set up GKE credentials
-    if: ${{ inputs.GKE_CLUSTER }} != "" && ${{ inputs.GKE_CLUSTER_LOCATION }} != ""
+    if: ${{ steps.check_has_gke.outputs.has_gke }} == "true"
     uses: google-github-actions/get-gke-credentials@v0
     with:
       cluster_name: ${{ inputs.GKE_CLUSTER }}
