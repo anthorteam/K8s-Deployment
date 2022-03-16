@@ -96,17 +96,21 @@ runs:
     shell: bash
     run: |
       if [ '${{ steps.check_has_gke_or_oci.outputs.has_gke }}' == "true" ]; then
-        gcloud container clusters get-credentials '${{ inputs.GKE_CLUSTER }}' --region '${{ inputs.GKE_CLUSTER_LOCATION }}'
+        gcloud container clusters get-credentials '${{ inputs.GKE_CLUSTER }}' \
+            --region '${{ inputs.GKE_CLUSTER_LOCATION }}'
         export KUBECONFIG=$HOME/.kube/config
       fi
 
   - name: Set up OKE credentials
-    if: ${{ steps.check_has_gke_or_oci.outputs.has_gke }} == "false"
     shell: bash
     run: |
       if [ '${{ steps.check_has_gke_or_oci.outputs.has_gke }}' == "false" ]; then
-        /home/runner/bin/oci ce cluster create-kubeconfig --cluster-id ${{ inputs.OKE_CLUSTER }} \
-          --file $HOME/.kube/config  --region ${{ inputs.OKE_CLUSTER_LOCATION }} --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
+        /home/runner/bin/oci ce cluster create-kubeconfig \
+            --cluster-id '${{ inputs.OKE_CLUSTER }}' \
+            --file $HOME/.kube/config  \
+            --region '${{ inputs.OKE_CLUSTER_LOCATION }}' \
+            --token-version 2.0.0 \
+            --kube-endpoint PUBLIC_ENDPOINT
         export KUBECONFIG=$HOME/.kube/config
       fi
 
@@ -124,15 +128,19 @@ runs:
         source .env
         rm -rf .env
       fi
-      perl -p -i.bak -E 's:{\{\s*(\S+?)\s*\}}:$ENV{$1} // die "$1 not set":ge' ${{ inputs.DEPLOYMENT_FILE }}
+      perl -p -i.bak -E 's:{\{\s*(\S+?)\s*\}}:$ENV{$1} // die "$1 not set":ge' '${{ inputs.DEPLOYMENT_FILE }}'
     shell: bash
 
   - name: Apply deployment
     run: |
-      kubectl config set-context --current --namespace=${{ inputs.K8S_NAMESPACE }}
-      kubectl apply -f ${{ inputs.DEPLOYMENT_FILE }}
-      if [ -n "${{ inputs.RESOURCE_NAME }}" ]; then
-        kubectl rollout status ${{ inputs.RESOURCE_TYPE }} ${{ inputs.RESOURCE_NAME }} --timeout=${{ inputs.ROLLOUT_TIMEOUT_MINUTES }}m
+      kubectl config set-context --current --namespace='${{ inputs.K8S_NAMESPACE }}'
+      kubectl apply -f '${{ inputs.DEPLOYMENT_FILE }}'
+      
+      if [ -n '${{ inputs.RESOURCE_NAME }}' ]; then
+        kubectl rollout status \
+            '${{ inputs.RESOURCE_TYPE }}' \
+            '${{ inputs.RESOURCE_NAME }}' \
+            --timeout='${{ inputs.ROLLOUT_TIMEOUT_MINUTES }}m'
       fi
     shell: bash
 
