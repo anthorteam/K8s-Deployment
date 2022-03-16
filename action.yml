@@ -86,20 +86,29 @@ runs:
         fi
       fi
 
+# Could be used if conditionals worked or continue-on-error
+#  - name: Set up GKE credentials
+#    uses: google-github-actions/get-gke-credentials@v0
+#    with:
+#      cluster_name: ${{ inputs.GKE_CLUSTER }}
+#      location: ${{ inputs.GKE_CLUSTER_LOCATION }}
   - name: Set up GKE credentials
-    if: ${{ steps.check_has_gke_or_oci.outputs.has_gke }} == "true"
-    uses: google-github-actions/get-gke-credentials@v0
-    with:
-      cluster_name: ${{ inputs.GKE_CLUSTER }}
-      location: ${{ inputs.GKE_CLUSTER_LOCATION }}
+    shell: bash
+    run: |
+      if [ '${{ steps.check_has_gke_or_oci.outputs.has_gke }}' == "true" ]; then
+        gcloud container clusters get-credentials '${{ inputs.GKE_CLUSTER }}' --region '${{ inputs.GKE_CLUSTER_LOCATION }}'
+        export KUBECONFIG=$HOME/.kube/config
+      fi
 
   - name: Set up OKE credentials
     if: ${{ steps.check_has_gke_or_oci.outputs.has_gke }} == "false"
     shell: bash
     run: |
-      /home/runner/bin/oci ce cluster create-kubeconfig --cluster-id ${{ inputs.OKE_CLUSTER }} \
-        --file $HOME/.kube/config  --region ${{ inputs.OKE_CLUSTER_LOCATION }} --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
-      export KUBECONFIG=$HOME/.kube/config
+      if [ '${{ steps.check_has_gke_or_oci.outputs.has_gke }}' == "false" ]; then
+        /home/runner/bin/oci ce cluster create-kubeconfig --cluster-id ${{ inputs.OKE_CLUSTER }} \
+          --file $HOME/.kube/config  --region ${{ inputs.OKE_CLUSTER_LOCATION }} --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
+        export KUBECONFIG=$HOME/.kube/config
+      fi
 
   - name: Replace variables in deployment
     run: |
