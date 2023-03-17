@@ -55,45 +55,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-  - id: check_has_gke_or_oci
-    shell: bash
-    run: |
-      if [ -z "${{ inputs.GKE_CLUSTER }}" ]; then
-        echo "NO GKE CLUSTER"
-        if [ -z "${{ inputs.OKE_CLUSTER }}" ]; then
-          echo "NO GKE AND NO OKE CLUSTER"
-          echo "::error title=Missing Cluster::No OKE or GKE Cluster informed"
-          exit 1
-        else
-          echo "NO GKE CLUSTER AND OKE CLUSTER AVAILABLE"
-          if [ -z "${{ inputs.OKE_CLUSTER_LOCATION }}" ]; then
-            echo "NO OKE CLUSTER LOCATION"
-            echo "::error title=Missing OKE Cluster Location::No OKE Cluster Location informed"
-            exit 2
-          else
-            echo "OKE CLUSTER LOCATION AVAILABLE"
-            echo "::set-output name=has_gke::false"
-          fi
-        fi
-      else
-        echo "GKE CLUSTER AVAILABLE"
-        if [ -z "${{ inputs.OKE_CLUSTER }}" ]; then
-          echo "NO OKE CLUSTER AND GKE CLUSTER AVAILABLE"
-          if [ -z "${{ inputs.GKE_CLUSTER_LOCATION }}" ]; then
-            echo "NO GKE CLUSTER LOCATION"
-            echo "::error title=Missing GKE Cluster Location::No GKE Cluster Location informed"
-            exit 2
-          else
-            echo "GKE CLUSTER LOCATION AVAILABLE"
-            echo "::set-output name=has_gke::true"
-          fi
-        else
-          echo "GKE AND OKE CLUSTER AVAILABLE"
-          echo "::error title=Too many Clusters::Both OKE and GKE Cluster informed"
-          exit 3
-        fi
-      fi
-
   - name: Set up GKE credentials
     if: inputs.GKE_CLUSTER != '' && inputs.GKE_CLUSTER_LOCATION != ''
     uses: google-github-actions/get-gke-credentials@v0
