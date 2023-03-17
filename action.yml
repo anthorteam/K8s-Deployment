@@ -40,6 +40,14 @@ inputs:
     description: The OCI cluster region or zone
     required: false
     default: ""
+  AKS_CLUSTER:
+    description: The Azure cluster name in which to deploy
+    required: false
+    default: ""
+  AKS_RESOURCE_GROUP:
+    description: The Azure cluster resource group
+    required: false
+    default: ""
   EXTRA_VARS:
     description: Extra variables to replace in the deployment file separated by ; in the format <NAME>=<VALUE>
     required: false
@@ -87,24 +95,29 @@ runs:
       fi
 
   - name: Set up GKE credentials
-    if: inputs.GKE_CLUSTER != "" && inputs.GKE_CLUSTER_LOCATION != ""
+    if: inputs.GKE_CLUSTER != '' && inputs.GKE_CLUSTER_LOCATION != ''
     uses: google-github-actions/get-gke-credentials@v0
     with:
       cluster_name: ${{ inputs.GKE_CLUSTER }}
       location: ${{ inputs.GKE_CLUSTER_LOCATION }}
 
   - name: Set up OKE credentials
+    if: inputs.OKE_CLUSTER != '' && inputs.OKE_CLUSTER_LOCATION != ''
     shell: bash
     run: |
-      if [ '${{ steps.check_has_gke_or_oci.outputs.has_gke }}' == "false" ]; then
-        /home/runner/bin/oci ce cluster create-kubeconfig \
-            --cluster-id '${{ inputs.OKE_CLUSTER }}' \
-            --file $HOME/.kube/config  \
-            --region '${{ inputs.OKE_CLUSTER_LOCATION }}' \
-            --token-version 2.0.0 \
-            --kube-endpoint PUBLIC_ENDPOINT
-        export KUBECONFIG=$HOME/.kube/config
-      fi
+      /home/runner/bin/oci ce cluster create-kubeconfig \
+          --cluster-id '${{ inputs.OKE_CLUSTER }}' \
+          --file $HOME/.kube/config  \
+          --region '${{ inputs.OKE_CLUSTER_LOCATION }}' \
+          --token-version 2.0.0 \
+          --kube-endpoint PUBLIC_ENDPOINT
+      export KUBECONFIG=$HOME/.kube/config
+
+  - name: Set up Az Credentials
+    if: inputs.AKS_CLUSTER != '' && inputs.AKS_RESOURCE_GROUP != ''
+    shell: bash
+    run: |
+      az aks get-credentials --name inputs.AKS_CLUSTER --resource-group inputs.AKS_RESOURCE_GROUP
 
   - name: Replace variables in deployment
     run: |
