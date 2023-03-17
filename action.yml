@@ -117,7 +117,7 @@ runs:
     if: inputs.AKS_CLUSTER != '' && inputs.AKS_RESOURCE_GROUP != ''
     shell: bash
     run: |
-      az aks get-credentials --name inputs.AKS_CLUSTER --resource-group inputs.AKS_RESOURCE_GROUP
+      az aks get-credentials --name '${{ inputs.AKS_CLUSTER }}' --resource-group '${{ inputs.AKS_RESOURCE_GROUP }}'
 
   - name: Replace variables in deployment
     run: |
@@ -136,7 +136,8 @@ runs:
       perl -p -i.bak -E 's:{\{\s*(\S+?)\s*\}}:$ENV{$1} // die "$1 not set":ge' '${{ inputs.DEPLOYMENT_FILE }}'
     shell: bash
 
-  - name: Apply deployment
+  - name: Apply deployment with rollout on failure
+    shell: bash
     run: |
       kubectl config set-context --current --namespace='${{ inputs.K8S_NAMESPACE }}'
       kubectl apply -f '${{ inputs.DEPLOYMENT_FILE }}'
@@ -145,7 +146,6 @@ runs:
         kubectl rollout status \
             '${{ inputs.RESOURCE_TYPE }}' \
             '${{ inputs.RESOURCE_NAME }}' \
-            --timeout='${{ inputs.ROLLOUT_TIMEOUT_MINUTES }}m'
+            --timeout='${{ inputs.ROLLOUT_TIMEOUT_MINUTES }}m' \
+        || (kubectl rollout undo deployment '${{ inputs.RESOURCE_TYPE }}' '${{ inputs.RESOURCE_NAME }}'; false)
       fi
-    shell: bash
-
