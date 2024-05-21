@@ -62,23 +62,23 @@ runs:
       cluster_name: ${{ inputs.GKE_CLUSTER }}
       location: ${{ inputs.GKE_CLUSTER_LOCATION }}
 
-  - name: Set up OKE credentials
-    if: inputs.OKE_CLUSTER != '' && inputs.OKE_CLUSTER_LOCATION != ''
-    shell: bash
-    run: |
-      /home/runner/bin/oci ce cluster create-kubeconfig \
-          --cluster-id '${{ inputs.OKE_CLUSTER }}' \
-          --file $HOME/.kube/config  \
-          --region '${{ inputs.OKE_CLUSTER_LOCATION }}' \
-          --token-version 2.0.0 \
-          --kube-endpoint PUBLIC_ENDPOINT
-      export KUBECONFIG=$HOME/.kube/config
-
-  - name: Set up Az Credentials
-    if: inputs.AKS_CLUSTER != '' && inputs.AKS_RESOURCE_GROUP != ''
-    shell: bash
-    run: |
-      az aks get-credentials --name '${{ inputs.AKS_CLUSTER }}' --resource-group '${{ inputs.AKS_RESOURCE_GROUP }}'
+#  - name: Set up OKE credentials
+#    if: inputs.OKE_CLUSTER != '' && inputs.OKE_CLUSTER_LOCATION != ''
+#    shell: bash
+#    run: |
+#      /home/runner/bin/oci ce cluster create-kubeconfig \
+#          --cluster-id '${{ inputs.OKE_CLUSTER }}' \
+#          --file $HOME/.kube/config  \
+#          --region '${{ inputs.OKE_CLUSTER_LOCATION }}' \
+#          --token-version 2.0.0 \
+#          --kube-endpoint PUBLIC_ENDPOINT
+#      export KUBECONFIG=$HOME/.kube/config
+#
+#  - name: Set up Az Credentials
+#    if: inputs.AKS_CLUSTER != '' && inputs.AKS_RESOURCE_GROUP != ''
+#    shell: bash
+#    run: |
+#      az aks get-credentials --name '${{ inputs.AKS_CLUSTER }}' --resource-group '${{ inputs.AKS_RESOURCE_GROUP }}'
 
   - name: Replace variables in deployment
     run: |
